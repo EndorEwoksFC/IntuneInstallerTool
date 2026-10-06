@@ -1,0 +1,72 @@
+{
+  "version": {
+    "versionNumber": "1"
+  },
+  
+  "logging": {
+    "logPath": ".\\Installer.log",
+    "levels": [
+      "INFO",
+      "WARN",
+      "ERROR"
+    ]
+  },
+
+  "paths": {
+    "outputRoot": ".\\Output",
+    "metadataPath": ".\\InstallerMetadata.txt",
+    "detectionMethodPath": ".\\DetectionMethod.txt",
+    "modulesRoot": ".\\Modules"
+  },
+
+  "installerDiscovery": {
+    "searchRoot": ".",
+    "recursive": true,
+    "extensions": [
+      ".exe",
+      ".msi",
+      ".msix",
+      ".bat",
+      ".cmd",
+      ".ps1"
+    ],
+    "excludedFileNames": [
+      "Launch.ps1",
+      "Launch.bat",
+      "IntuneWinAppUtil.exe"
+    ],
+    "excludedDirectories": [
+      "Modules",
+      "Config",
+      "Output"
+    ]
+  },
+
+  "registrySnapshot": {
+    "nativePath": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+    "wow6432Path": "HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+    "preNativeFile": "Reg_PreInstall.json",
+    "preWowFile": "Reg_WOW6432NODE_PreInstall.json",
+    "postNativeFile": "Reg_PostInstall.json",
+    "postWowFile": "Reg_WOW6432NODE_PostInstall.json",
+    "comparisonFile": "RegistryComparison.json"
+  },
+
+  "installDirectorySnapshot": {
+    "paths": [
+      "C:\\Program Files",
+      "C:\\Program Files (x86)",
+      "C:\\ProgramData"
+    ],
+    "topLevelOnly": true,
+    "preFile": "InstallDirectory_PreInstall.json",
+    "postFile": "InstallDirectory_PostInstall.json",
+    "comparisonFile": "InstallDirectoryComparison.json"
+  },
+
+  "intuneWin": {
+  "toolPath": "IntuneWinAppUtil.exe",
+  "outputFolder": ".\\Output",
+  "quiet": true
+}
+}
