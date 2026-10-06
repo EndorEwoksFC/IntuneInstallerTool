@@ -56,17 +56,50 @@ function Invoke-InstallTest {
                     Write-Host ''
                     #>
                     try {
-                        $psi=New-Object System.Diagnostics.ProcessStartInfo
-                        $psi.FileName='cmd.exe';$psi.Arguments='/c ' + $issResult.SilentCommand;$psi.UseShellExecute=$false;$psi.CreateNoWindow=$true
-                        $proc=New-Object System.Diagnostics.Process;$proc.StartInfo=$psi;$null=$proc.Start();$proc.WaitForExit();$playExit=$proc.ExitCode
+                        $psi = New-Object System.Diagnostics.ProcessStartInfo
+                        $psi.FileName = 'cmd.exe'
+                        $psi.Arguments = '/c ' + $issResult.SilentCommand
+                        $psi.UseShellExecute = $false
+                        $psi.CreateNoWindow = $true
+
+                        $proc = New-Object System.Diagnostics.Process
+                        $proc.StartInfo = $psi
+                        $null = $proc.Start()
+                        $proc.WaitForExit()
+                        $playExit = $proc.ExitCode
+
                         Write-Log -LogPath $LogPath -Level INFO -Component 'Invoke-InstallTest' -Message ("ISS install playback exit code: {0}" -f $playExit)
-                    } catch { $playExit=-1;Write-Log -LogPath $LogPath -Level ERROR -Component 'Invoke-InstallTest' -Message 'ISS install playback failed to start' -Exception $_ }
+                    }
+                    catch {
+                        $playExit = -1
+                        Write-Log -LogPath $LogPath -Level ERROR -Component 'Invoke-InstallTest' -Message 'ISS install playback failed to start' -Exception $_
+                    }
+
                     cls
-                    $ok=Read-YesNo -Prompt 'Was the install successful?' -LogPath $LogPath
+                    $ok = Read-YesNo -Prompt 'Was the install successful?' -LogPath $LogPath
                     cls
-                    if($ok){return [pscustomobject]@{Success=$true;ConfirmedInstallCommand=$issResult.SilentCommand;AttemptCount=1;ExitCode=$playExit;UsedIssRecording=$true;IssSilentCommand=$issResult.SilentCommand;InstallMethod='ISSPlayback'}}
-                    $fallback=Show-Menu -Prompt 'Choose how to continue:' -Options @('Retry ISS install playback','Enter custom install parameters') -LogPath $LogPath
-                    if($fallback.SelectedIndex -eq 1){continue}
+
+                    if ($ok) {
+                        return [pscustomobject]@{
+                            Success = $true
+                            ConfirmedInstallCommand = $issResult.SilentCommand
+                            AttemptCount = 1
+                            ExitCode = $playExit
+                            UsedIssRecording = $true
+                            IssSilentCommand = $issResult.SilentCommand
+                            InstallMethod = 'ISSPlayback'
+                        }
+                    }
+
+                    $fallback = Show-Menu -Prompt 'Choose how to continue:' -Options @(
+                        'Retry ISS install playback',
+                        'Enter custom install parameters'
+                    ) -LogPath $LogPath
+
+                    if ($fallback.SelectedIndex -eq 1) {
+                        continue
+                    }
+
                     break
                 }
             }
@@ -164,7 +197,7 @@ function Invoke-InstallTest {
                 <#
                 Write-Host 'Install confirmed.'
                 #>
-            
+
                 Write-Log -LogPath $LogPath -Level INFO -Component 'Invoke-InstallTest' -Message ("Attempt {0} confirmed successful by user" -f $attempt)
 
                 return [pscustomobject]@{

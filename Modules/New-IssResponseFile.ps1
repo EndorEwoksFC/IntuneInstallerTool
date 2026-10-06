@@ -56,7 +56,8 @@ function New-IssResponseFile {
             Write-Host ''
         }
 
-        $proc = Start-Process -FilePath $ExePath `
+        $proc = Start-Process `
+            -FilePath $ExePath `
             -ArgumentList $arguments `
             -WorkingDirectory $workingFolder `
             -Wait `

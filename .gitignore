@@ -1,1 +1,4 @@
-Installers/
+/Installers/
+/Output/
+Installer.log
+DetectionMethod.txt

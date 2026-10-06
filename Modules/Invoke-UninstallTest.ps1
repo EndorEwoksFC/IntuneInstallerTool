@@ -1,4 +1,4 @@
-function Invoke-UninstallTest {
+﻿function Invoke-UninstallTest {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
@@ -25,10 +25,8 @@ function Invoke-UninstallTest {
 
         if ($RecommendedUninstallCommand.Success) {
             $recommendedCommandText = [string]$RecommendedUninstallCommand.RecommendedCommand
-
             $isMsiExec = $recommendedCommandText -match '(?i)(^|\s|")msiexec(\.exe)?(\s|")'
             $hasExe = $recommendedCommandText -match '(?i)\.exe'
-
             $canUseIss = $hasExe -and -not $isMsiExec
         }
 
@@ -79,7 +77,8 @@ function Invoke-UninstallTest {
             $issPath = Join-Path -Path $issFolder -ChildPath 'Uninstall.iss'
             $issLogPath = Join-Path -Path $issFolder -ChildPath 'Uninstall.log'
 
-            $match = [regex]::Match($RecommendedUninstallCommand.RecommendedCommand, '^"?(?<exe>[^"]+?\.exe)"?(?<rest>.*)$', 'IgnoreCase')
+            $match = [regex]::Match($RecommendedUninstallCommand.RecommendedCommand, '^"?(?<exe>[^\"]+?\.exe)"?(?<rest>.*)$', 'IgnoreCase')
+
             if (-not $match.Success) {
                 Write-Host 'The detected uninstall command is not in a supported EXE format for ISS creation.'
                 Write-Host 'Please choose another uninstall option.'
@@ -102,17 +101,51 @@ function Invoke-UninstallTest {
                     Write-Host ''
                     #>
                     try {
-                        $psi=New-Object System.Diagnostics.ProcessStartInfo
-                        $psi.FileName='cmd.exe';$psi.Arguments='/c ' + $issResult.SilentCommand;$psi.UseShellExecute=$false;$psi.CreateNoWindow=$true
-                        $proc=New-Object System.Diagnostics.Process;$proc.StartInfo=$psi;$null=$proc.Start();$proc.WaitForExit();$playExit=$proc.ExitCode
+                        $psi = New-Object System.Diagnostics.ProcessStartInfo
+                        $psi.FileName = 'cmd.exe'
+                        $psi.Arguments = '/c ' + $issResult.SilentCommand
+                        $psi.UseShellExecute = $false
+                        $psi.CreateNoWindow = $true
+
+                        $proc = New-Object System.Diagnostics.Process
+                        $proc.StartInfo = $psi
+                        $null = $proc.Start()
+                        $proc.WaitForExit()
+                        $playExit = $proc.ExitCode
+
                         Write-Log -LogPath $LogPath -Level INFO -Component 'Invoke-UninstallTest' -Message ("ISS uninstall playback exit code: {0}" -f $playExit)
-                    } catch { $playExit=-1;Write-Log -LogPath $LogPath -Level ERROR -Component 'Invoke-UninstallTest' -Message 'ISS uninstall playback failed to start' -Exception $_ }
+                    }
+                    catch {
+                        $playExit = -1
+                        Write-Log -LogPath $LogPath -Level ERROR -Component 'Invoke-UninstallTest' -Message 'ISS uninstall playback failed to start' -Exception $_
+                    }
+
                     cls
-                    $ok=Read-YesNo -Prompt 'Was the uninstall successful?' -LogPath $LogPath
-                    if($ok){return [pscustomobject]@{Success=$true;ConfirmedUninstallCommand=$issResult.SilentCommand;UninstallStringSource=$commandSource;AttemptCount=1;ExitCode=$playExit;UsedIssRecording=$true;IssSilentCommand=$issResult.SilentCommand;UninstallMethod='ISSPlayback'}}
+                    $ok = Read-YesNo -Prompt 'Was the uninstall successful?' -LogPath $LogPath
+
+                    if ($ok) {
+                        return [pscustomobject]@{
+                            Success = $true
+                            ConfirmedUninstallCommand = $issResult.SilentCommand
+                            UninstallStringSource = $commandSource
+                            AttemptCount = 1
+                            ExitCode = $playExit
+                            UsedIssRecording = $true
+                            IssSilentCommand = $issResult.SilentCommand
+                            UninstallMethod = 'ISSPlayback'
+                        }
+                    }
+
                     cls
-                    $fallback=Show-Menu -Prompt 'Choose how to continue:' -Options @('Retry ISS uninstall playback','Enter a custom uninstall string') -LogPath $LogPath
-                    if($fallback.SelectedIndex -eq 1){continue}
+                    $fallback = Show-Menu -Prompt 'Choose how to continue:' -Options @(
+                        'Retry ISS uninstall playback',
+                        'Enter a custom uninstall string'
+                    ) -LogPath $LogPath
+
+                    if ($fallback.SelectedIndex -eq 1) {
+                        continue
+                    }
+
                     break
                 }
             }
@@ -127,12 +160,12 @@ function Invoke-UninstallTest {
         }
         elseif ($mode -eq 1) {
             $command = $RecommendedUninstallCommand.RecommendedCommand
-            $commandSource = if ([string]::IsNullOrWhiteSpace($RecommendedUninstallCommand.Source)) { 
-                'Custom' 
-                } 
-                else { 
-                    $RecommendedUninstallCommand.Source 
-                }
+            $commandSource = if ([string]::IsNullOrWhiteSpace($RecommendedUninstallCommand.Source)) {
+                'Custom'
+            }
+            else {
+                $RecommendedUninstallCommand.Source
+            }
 
             Write-Log -LogPath $LogPath -Level INFO -Component 'Invoke-UninstallTest' -Message 'User selected detected uninstall string'
         }
@@ -154,7 +187,13 @@ function Invoke-UninstallTest {
             while ([string]::IsNullOrWhiteSpace($appendText))
 
             $command = ($RecommendedUninstallCommand.RecommendedCommand.TrimEnd() + ' ' + $appendText.Trim())
-            $commandSource = if ([string]::IsNullOrWhiteSpace($RecommendedUninstallCommand.Source)) { 'Custom' } else { $RecommendedUninstallCommand.Source }
+            $commandSource = if ([string]::IsNullOrWhiteSpace($RecommendedUninstallCommand.Source)) {
+                'Custom'
+            }
+            else {
+                $RecommendedUninstallCommand.Source
+            }
+
             Write-Log -LogPath $LogPath -Level INFO -Component 'Invoke-UninstallTest' -Message ("User appended text to detected uninstall string: {0}" -f $appendText)
         }
         else {
@@ -164,7 +203,7 @@ function Invoke-UninstallTest {
                 Write-Host ''
 
                 if ($RecommendedUninstallCommand.WasModified) {
-                    Write-Host 'Silent uninstall string (modifiedfrom detected):'
+                    Write-Host 'Silent uninstall string (modified from detected):'
                     Write-Host $RecommendedUninstallCommand.RecommendedCommand
                     Write-Host ''
                 }
@@ -227,12 +266,12 @@ function Invoke-UninstallTest {
                 Write-Log -LogPath $LogPath -Level ERROR -Component 'Invoke-UninstallTest' -Message ("Attempt {0} command could not be started" -f $attempt) -Exception $_
                 break
             }
-            
+
             cls
             $ok = Read-YesNo -Prompt 'Was the uninstall successful?' -LogPath $LogPath
 
             if ($ok) {
-                <# 
+                <#
                 Write-Host 'Uninstall confirmed.'
                 #>
                 Write-Log -LogPath $LogPath -Level INFO -Component 'Invoke-UninstallTest' -Message ("Attempt {0} confirmed successful by user" -f $attempt)

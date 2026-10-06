@@ -46,7 +46,12 @@ function Get-RecommendedUninstallCommand {
 
         $updated = Convert-UninstallCommandPath -Command $Command
         $wasModified = ($updated -ne $Command.Trim())
-        $reason = if ($wasModified) { 'Quoted executable path because it contains spaces.' } else { '' }
+        $reason = if ($wasModified) {
+            'Quoted executable path because it contains spaces.'
+        }
+        else {
+            ''
+        }
 
         if ($updated -match '(?i)msiexec') {
             $original = $updated
@@ -59,7 +64,12 @@ function Get-RecommendedUninstallCommand {
 
             if ($updated -ne $original) {
                 $wasModified = $true
-                $reason = if ($wasModified -and $updated -ne $original) { 'Quoted executable path and converted MSI /I to /X with /qn for silent uninstall.' } else { 'Converted MSI /I to /X and appended /qn for silent uninstall.' }
+                $reason = if ($wasModified -and $updated -ne $original) {
+                    'Quoted executable path and converted MSI /I to /X with /qn for silent uninstall.'
+                }
+                else {
+                    'Converted MSI /I to /X and appended /qn for silent uninstall.'
+                }
             }
         }
 

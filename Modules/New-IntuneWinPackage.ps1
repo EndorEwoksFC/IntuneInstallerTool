@@ -24,7 +24,8 @@ function New-IntuneWinPackage {
     Write-Log -LogPath $LogPath -Level INFO -Component 'New-IntuneWinPackage' -Message ("Starting IntuneWin creation using setup folder '{0}' and setup file '{1}'" -f $setupFolder, $setupFile)
 
     try {
-        $proc = Start-Process -FilePath $ToolPath `
+        $proc = Start-Process `
+            -FilePath $ToolPath `
             -ArgumentList @(
                 '-c', $setupFolder,
                 '-s', $setupFile,
